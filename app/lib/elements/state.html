@@ -1,0 +1,175 @@
+<polymer-element name="polymer-sr-state" attributes="name url templateUrl template onActive">
+  <script>
+    Polymer('polymer-sr-state', {
+      name: '',
+      url: '',
+      template: null,
+      templateUrl: null,
+      onActive: null,
+
+      __info: null,
+      __parentState: null,
+      __fullPathRegexp: null,
+      
+      get info () {
+        if (this.__info) {
+          return this.__info;
+        }
+
+        var info = {};
+        var urldata = this.parseUrl();
+
+        info.names = this.parseName();
+        info.params = urldata.params;
+        info.regexp = urldata.regexp;
+
+        this.__info = info;
+
+        return info;
+      },
+
+      get parentState () {
+        if (this.__parentState) {
+          return this.__parentState;
+        }
+        var parentElement = this.parentElement;
+        var states = parentElement.states;
+        var names = this.info.names;
+        var parentName = names.slice(0, names.length - 1).join('.');
+        this.__parentState = states[parentName] || null;
+        return this.__parentState;
+      },
+
+      get fullPathRegexp () {
+        if (this.__fullPathRegexp) {
+          return this.__fullPathRegexp;
+        }
+        var regexp = '';
+        var state = this;
+        do {
+          regexp = state.info.regexp + regexp;
+          state = state.parentState;
+        } while (state);
+        regexp = '^' + regexp + '$';
+        regexp = regexp.replace(/\/\/+/g, '/')
+        this.__fullPathRegexp = new RegExp(regexp);
+        return this.__fullPathRegexp;
+      },
+
+      parseName: function () {
+        var placeholderRegexp = /\uffff/g;
+        return (function (names) {
+          var data = [];
+          var i, len = names.length;
+          for (i = 0; i < len; i += 1) {
+            data.push(names[i].replace(placeholderRegexp, '.'));
+          }
+          return data;
+        })((this.name || '').replace(/\\./g, '\uffff').split('.'));
+      },
+
+      parseUrl: function () {
+        // 1. /book/:id      => /book/507f191e810c19729de860ea
+        // 2. /book/*/:id    => /book/this-is-a-book/507f191e810c19729de860ea 
+        // 3. /books/:page?  => /books/2,   /books
+        var url = this.url || '';
+        var params = [];
+        var regexp = url
+        .replace(/\*/g, '(.*)')
+        .replace(/(\/)?:(\w+)(\?)?/g, function (_, slash, key, optional) {
+          params.push({
+            optional: !!optional,
+            name: key
+          });
+          return ''
+          + (optional ? '' : slash)
+          + (optional ? slash : '')
+          + '([^/]+?)'
+          + (optional || '')
+          + '/*';
+        });
+        return {
+          params: params,
+          regexp: regexp
+        };
+      },
+
+      getUrl: function (data) {
+        data = data || {};
+        var url = this.url || '';
+        url = url.replace(/(\/)?:(\w+)(\?)?/g, function (_, slash, key, optional) {
+          return ''
+          + (slash || '')
+          + data[key];
+        });
+        return url;
+      },
+
+      getParams: function (path) {
+        path = path || '';
+        var regexp = this.fullPathRegexp;
+        var match = path.match(regexp);
+        var params = this.info.params;
+        var data = {};
+        var len = match.length - 1;
+        match.shift();
+        while (len--) {
+          data[params[len].name] = match[len];
+        }
+        return data;
+      },
+
+      test: function (path) {
+        return this.fullPathRegexp.test(path);
+      },
+
+      getTemplate: function (cb) {
+        if (this.template) {
+          cb && cb(this.html2dom(this.template));
+          return this;
+        }
+        var xhr = document.createElement('polymer-sr-xhr');
+        var options = {};
+
+        options.url = this.templateUrl;
+        options.responseType = 'text';
+        options.callback = (function (response, xhr) {
+          var template = this.receiveAjaxResponse(response, xhr);
+          if (template) {
+            cb && cb(template);
+          }
+        }).bind(this);
+
+        xhr.request(options);
+        return this;
+      },
+
+      receiveAjaxResponse: function (response, xhr) {
+        var status = (xhr.status || 0);
+        if (status >= 200 && status < 300) {
+          return this.html2dom(xhr.responseText);
+        }
+        this.fire('polymer-sr-error', {response: response, xhr: xhr});
+        return false;
+      },
+
+      html2dom: function (html) {
+        var doc
+        if (window.DOMParser) {
+          var parser = new DOMParser();
+          doc = parser.parseFromString(html, 'text/html');
+        } else if (document.implementation && document.implementation.createDocument) {
+          doc = document.implementation.createHTMLDocument();
+          doc.documentElement.innerHTML = html;
+        } else {
+          doc = new ActiveXObject('Microsoft.XMLDOM');
+          try {
+            doc.async = 'false';
+            doc.loadXML(html);
+          } catch (e) {}
+        }
+        return doc;
+      }
+    });
+  </script>
+</polymer-element>

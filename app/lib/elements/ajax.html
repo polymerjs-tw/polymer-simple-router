@@ -1,0 +1,81 @@
+<!--
+  https://github.com/Polymer/polymer-elements/blob/cc82113898a8639754df311b1d96d75528d28ebd/polymer-ajax/polymer-xhr.html
+-->
+<polymer-element name="polymer-sr-xhr">
+  <template>
+    <style>
+      @host {
+        * {
+          display: none;
+        }
+      }
+    </style>
+  </template>
+  <script>
+    Polymer('polymer-sr-xhr', {
+      request: function (options) {
+        options = options || {};
+        var xhr = new XMLHttpRequest();
+        var method = options.method || 'GET';
+        var async = !options.sync;
+        var params = this.toQueryString(options.params);
+        var url = this.getRequestUrl(method, options.url || './', params);
+        var body = this.getRequestBody(method, options.body || null, params);
+        var responseType = options.responseType || 'json';
+        var headers = options.headers || {};
+        var callback = options.callback;
+
+        xhr.open(method, url, async);
+        xhr.responseType = responseType;
+
+        this.makeReadyStateHandler(xhr, callback);
+        this.setRequestHeaders(xhr, headers);
+
+        xhr.send(body);
+
+        if (!async) {
+          xhr.onreadystatechange(xhr);
+        }
+
+        return xhr;
+      },
+      toQueryString: function (params) {
+        params = params || {};
+        var i;
+        var data = [];
+        for (i in params) {
+          if (params.hasOwnProperty(i)) {
+            var val = encodeURIComponent(params[i]);
+            i = encodeURIComponent(i);
+            data.push(val ? (i + '=' + val) : i);
+          }
+        }
+        return data.join('&');
+      },
+      getRequestUrl: function (method, url, params) {
+        if (params && method == 'GET') {
+          url += (url.indexOf('?') > 0 ? '&' : '?') + params;
+        }
+        return url;
+      },
+      getRequestBody: function (method, body, params) {
+        return method == 'POST' ? (body || params) : null;
+      },
+      makeReadyStateHandler: function (xhr, callback) {
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState == 4) {
+            callback && callback.call(null, xhr.response, xhr);
+          }
+        };
+      },
+      setRequestHeaders: function (xhr, headers) {
+        var i;
+        for (i in headers) {
+          if (headers.hasOwnProperty(i)) {
+            xhr.setRequestHeader(i, headers[i]);
+          }
+        }
+      }
+    });
+  </script>
+</polymer-element>

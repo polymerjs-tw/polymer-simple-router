@@ -1,0 +1,3 @@
+[submodule "bower_components/web-animations-js"]
+	path = bower_components/web-animations-js
+	url = git@github.com:web-animations/web-animations-js.git

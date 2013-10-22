@@ -1,0 +1,26 @@
+{
+  "name": "polymer-spa-template",
+  "version": "0.0.0",
+  "authors": [
+    "Po-Ying Chen <poying.me@gmail.com>"
+  ],
+  "keywords": [
+    "polymer",
+    "spa",
+    "single",
+    "page",
+    "apploaction"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "~0.0.20131010",
+    "html5-history-api": "~4.0.2"
+  }
+}

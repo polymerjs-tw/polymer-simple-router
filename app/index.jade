@@ -1,0 +1,24 @@
+doctype 5
+html(lang="zh-TW")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+
+    title APP
+
+    script(src="./js/lib.js")
+    script(src="./js/demo-app.js")
+
+    link(rel="import", src="./polymer-simple-router-elements.html")
+
+  body
+    polymer-sr-router
+      polymer-sr-state(name="home", url="/", templateUrl="./home.html")
+      polymer-sr-state(name="home.state1", templateUrl="/", url="/state1/:test")
+      polymer-sr-state(name="home.state1.state2", url="/state1/:s1val/state2/:s2val")
+      polymer-sr-state(name="home.state3", url="/state3")
+      polymer-sr-state(name="test", url="/test", template="<title>test</title><polymer-sr-appview>TEST</polymer-sr-appview>")
+      polymer-sr-state(name="test.gg", url="/test/:gg", template="<title>test</title><polymer-sr-appview>TEST</polymer-sr-appview>")
+    
+    polymer-sr-appview
+      a(class="btn", href="/test", data-state="test") test

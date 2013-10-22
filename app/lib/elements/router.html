@@ -1,0 +1,138 @@
+<polymer-element name="polymer-sr-router" attributes="state">
+  <template>
+    <style>
+      @host {
+        * {
+          display: none;
+        }
+      }
+    </style>
+  </template>
+  <script>
+    Polymer('polymer-sr-router', {
+      state: null,
+      states: {},
+      stateNames: [],
+      appview: null,
+
+      get data () {
+        var state = this.state;
+        return state && state.getParams(location.params);
+      },
+
+      created: function () {
+        if (!window.history) {
+          throw new Error('Use HTML5-History-API to support old browser.');
+        }
+        return this
+          .initAppView()
+          .initEventListener()
+          .initStates()
+          .initState();
+      },
+
+      initAppView: function () {
+        var appview = document.getElementsByTagName('polymer-sr-appview')[0];
+        if (!appview) {
+          throw new Error('<polymer-sr-appview> not found.');
+        }
+        this.appview = appview;
+        return this;
+      },
+
+      initEventListener: function () {
+        window.addEventListener('popstate', (function (e) {
+          var state;
+          if (e.state && e.state.url) {
+            state = this.checkState(e.state.url);
+            this.changeState(state);
+          }
+        }).bind(this));
+        return this;
+      },
+
+      initStates: function () {
+        var states = this.states;
+        var names = this.stateNames;
+        var stateElements = document.getElementsByTagName('polymer-sr-state');
+        var i, len = stateElements.length;
+        var state;
+        for (i = 0; i < len; i += 1) {
+          state = stateElements[i];
+          states[state.name] = state;
+          names.push(state.name);
+        }
+        names.sort(function (a, b) {
+          return a.length - b.length;
+        });
+        return this;
+      },
+
+      initState: function () {
+        this.state = this.checkCurrentState();
+        return this;
+      },
+
+      checkCurrentState: function () {
+        return this.checkState((history.state && history.state.url) || location.href);
+      },
+
+      checkState: function (path) {
+        path = path.replace(/^https?:\/\/[^\/]*/, '');
+        var state;
+        this.eachState(function () {
+          if (this.test(path)) {
+            state = this;
+            return false;
+          }
+        });
+        return state;
+      },
+
+      eachState: function (fn) {
+        var states = this.states;
+        var state, i;
+        for (i in states) {
+          state = states[i];
+          if (fn.call(state, i, state) === false) {
+            break;
+          }
+        }
+        return this;
+      },
+
+      go: function (name, data) {
+        var state = this.states[name];
+        if (state) {
+          this.changeState(state, data);
+        }
+        return this;
+      },
+
+      changeState: function (state, data) {
+        if (this.state === state) {
+          return this;
+        }
+        this.fire('polymer-sr-state-change', {state: state});
+        state.getTemplate((function (doc) {
+          var title = doc.getElementsByTagName('title')[0];
+          var url = state.getUrl(data);
+          title = (title && title.textContent) || '';
+          document.title = title;
+          var appview = doc.getElementsByTagName('polymer-sr-appview')[0];
+          this.appview.innerHTML = (appview && appview.innerHTML) || '';
+          history.pushState({url: url}, title, url);
+          this.state = state;
+          this.fire('polymer-sr-state-changed', {state: state, doc: doc});
+        }).bind(this));
+        return this;
+      },
+
+      writeToHistory: function () {
+        var title = document.title;
+        history.pushState({url: url}, title, url);
+        return this;
+      }
+    });
+  </script>
+</polymer-element>
