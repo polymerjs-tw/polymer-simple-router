@@ -1,17 +1,13 @@
-<!--
-  https://github.com/Polymer/polymer-elements/blob/cc82113898a8639754df311b1d96d75528d28ebd/polymer-ajax/polymer-xhr.html
--->
-<polymer-element name="sr-xhr">
-  <template>
-    <style>
+// https://github.com/Polymer/polymer-elements/blob/cc82113898a8639754df311b1d96d75528d28ebd/polymer-ajax/polymer-xhr.html
+polymer-element(name="sr-xhr")
+  template
+    style
       @host {
         * {
           display: none;
         }
       }
-    </style>
-  </template>
-  <script>
+  script
     Polymer('sr-xhr', {
       request: function (options) {
         options = options || {};
@@ -39,6 +35,7 @@
 
         return xhr;
       },
+
       toQueryString: function (params) {
         params = params || {};
         var i;
@@ -52,15 +49,18 @@
         }
         return data.join('&');
       },
+
       getRequestUrl: function (method, url, params) {
         if (params && method == 'GET') {
           url += (url.indexOf('?') > 0 ? '&' : '?') + params;
         }
         return url;
       },
+
       getRequestBody: function (method, body, params) {
         return method == 'POST' ? (body || params) : null;
       },
+
       makeReadyStateHandler: function (xhr, callback) {
         xhr.onreadystatechange = function () {
           if (xhr.readyState == 4) {
@@ -68,6 +68,7 @@
           }
         };
       },
+
       setRequestHeaders: function (xhr, headers) {
         var i;
         for (i in headers) {
@@ -77,5 +78,3 @@
         }
       }
     });
-  </script>
-</polymer-element>

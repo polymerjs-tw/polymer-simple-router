@@ -1,14 +1,12 @@
-<polymer-element name="sr-router" attributes="state">
-  <template>
-    <style>
+polymer-element(name="sr-router", \attributes="state")
+  template
+    style
       @host {
         * {
           display: none;
         }
       }
-    </style>
-  </template>
-  <script>
+  script
     Polymer('sr-router', {
       state: null,
       states: {},
@@ -154,5 +152,3 @@
         return view;
       }
     });
-  </script>
-</polymer-element>

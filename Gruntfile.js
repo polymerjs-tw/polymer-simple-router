@@ -11,7 +11,7 @@ module.exports = function (grunt) {
     bowerDir: '<%= sourceDir %>/bower_components',
     buildtag: '-dev-' + grunt.template.today('yyyy-mm-dd'),
     buildFiles: {
-      elements: '<%= sourceDir %>/lib/elements/**/*.html'
+      elements: '<%= sourceDir %>/lib/elements/**/*.jade'
     },
     meta: {
       banner: '/**\n' +
@@ -35,10 +35,6 @@ module.exports = function (grunt) {
       stylus: {
         files: ['<%= sourceDir %>/**/*.styl'],
         tasks: ['stylus:dev']
-      },
-      html: {
-        files: ['<%= sourceDir %>/**/*.html'],
-        tasks: ['jshint', 'concat:dev']
       }
     },
     jshint: {
@@ -73,6 +69,22 @@ module.exports = function (grunt) {
       options: {
         data: false
       },
+      elementsDev: {
+        options: {
+          pretty: true
+        },
+        files: {
+          '<%= buildDir %>/<%= pkg.name %>-elements.html': '<%= buildFiles.elements %>'
+        }
+      },
+      elementsProd: {
+        options: {
+          pretty: false
+        },
+        files: {
+          '<%= releaseDir %>/<%= pkg.name %>-elements.html': '<%= buildFiles.elements %>'
+        }
+      },
       dev: {
         options: {
           pretty: true
@@ -101,16 +113,10 @@ module.exports = function (grunt) {
     concat: {
       dev: {
         files: {
-          '<%= buildDir %>/<%= pkg.name %>-elements.html': ['<%= buildFiles.elements %>'],
           '<%= buildDir %>/js/lib.js': ['<%= sourceDir %>/bower_components/polymer/polymer.min.js'],
           '<%= buildDir %>/js/demo-app.js': [
             '<%= sourceDir %>/js/demo-app/app.js'
           ]
-        }
-      },
-      prod: {
-        files: {
-          '<%= releaseDir %>/<%= pkg.name %>-elements.html': ['<%= buildFiles.elements %>'],
         }
       }
     },
@@ -172,6 +178,6 @@ module.exports = function (grunt) {
   grunt.registerTask('server', ['connect']);
   grunt.registerTask('default', ['build', 'connect:dev', 'watch']);
 
-  grunt.registerTask('build', ['jshint', 'concat:dev', 'jade:dev', 'stylus:dev']);
-  grunt.registerTask('build:prod', ['jshint', 'concat:prod', 'uglify', 'jade:prod', 'stylus:prod']);
+  grunt.registerTask('build', ['jshint', 'concat:dev', 'jade:dev', 'jade:elementsDev', 'stylus:dev']);
+  grunt.registerTask('build:prod', ['jshint', 'uglify', 'jade:prod', 'jade:elementsProd', 'stylus:prod']);
 };
