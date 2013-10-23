@@ -1,0 +1,407 @@
+<!-- https://github.com/Polymer/polymer-elements/blob/cc82113898a8639754df311b1d96d75528d28ebd/polymer-ajax/polymer-xhr.html--><polymer-element name="sr-xhr"><template><style>@host {
+  * {
+    display: none;
+  }
+}</style></template><script>Polymer('sr-xhr', {
+  request: function (options) {
+    options = options || {};
+    var xhr = new XMLHttpRequest();
+    var method = options.method || 'GET';
+    var async = !options.sync;
+    var params = this.toQueryString(options.params);
+    var url = this.getRequestUrl(method, options.url || './', params);
+    var body = this.getRequestBody(method, options.body || null, params);
+    var responseType = options.responseType || 'json';
+    var headers = options.headers || {};
+    var callback = options.callback;
+    
+    xhr.open(method, url, async);
+    xhr.responseType = responseType;
+    
+    this.makeReadyStateHandler(xhr, callback);
+    this.setRequestHeaders(xhr, headers);
+    
+    xhr.send(body);
+    
+    if (!async) {
+      xhr.onreadystatechange(xhr);
+    }
+    
+    return xhr;
+  },
+  
+  toQueryString: function (params) {
+    params = params || {};
+    var i;
+    var data = [];
+    for (i in params) {
+      if (params.hasOwnProperty(i)) {
+        var val = encodeURIComponent(params[i]);
+        i = encodeURIComponent(i);
+        data.push(val ? (i + '=' + val) : i);
+      }
+    }
+    return data.join('&');
+  },
+  
+  getRequestUrl: function (method, url, params) {
+    if (params && method == 'GET') {
+      url += (url.indexOf('?') > 0 ? '&' : '?') + params;
+    }
+    return url;
+  },
+  
+  getRequestBody: function (method, body, params) {
+    return method == 'POST' ? (body || params) : null;
+  },
+  
+  makeReadyStateHandler: function (xhr, callback) {
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState == 4) {
+        callback && callback.call(null, xhr.response, xhr);
+      }
+    };
+  },
+  
+  setRequestHeaders: function (xhr, headers) {
+    var i;
+    for (i in headers) {
+      if (headers.hasOwnProperty(i)) {
+        xhr.setRequestHeader(i, headers[i]);
+      }
+    }
+  }
+});</script></polymer-element>
+
+<polymer-element name="sr-appview"></polymer-element>
+
+<polymer-element name="sr-router" attributes="state"><template><style>@host {
+  * {
+    display: none;
+  }
+}</style></template><script>Polymer('sr-router', {
+  state: null,
+  states: {},
+  stateNames: [],
+  appview: null,
+  
+  get data () {
+    var state = this.state;
+    return state && state.getParams(location.params);
+  },
+  
+  created: function () {
+    if (!window.history) {
+      throw new Error('Use HTML5-History-API to support old browser.');
+    }
+    return this
+      .initAppView()
+      .initEventListener()
+      .initStates()
+      .initState();
+  },
+  
+  initAppView: function () {
+    var appview = document.getElementsByTagName('sr-appview')[0];
+    if (!appview) {
+      throw new Error('<sr-appview> not found.');
+    }
+    this.appview = appview;
+    return this;
+  },
+  
+  initEventListener: function () {
+    window.addEventListener('popstate', (function (e) {
+      var state;
+      if (e.state && e.state.url) {
+        state = this.checkState(e.state.url);
+        this.changeState(state);
+      }
+    }).bind(this));
+    return this;
+  },
+  
+  initStates: function () {
+    var states = this.states;
+    var names = this.stateNames;
+    var stateElements = this.getElementsByTagName('sr-state');
+    var i, len = stateElements.length;
+    var state;
+    for (i = 0; i < len; i += 1) {
+      state = stateElements[i];
+      states[state.name] = state;
+      names.push(state.name);
+    }
+    names.sort(function (a, b) {
+      return a.length - b.length;
+    });
+    return this;
+  },
+  
+  initState: function () {
+    this.state = this.checkCurrentState();
+    var title = document.getElementsByTagName('title')[0];
+    var url = location.pathname;
+    title = (title && title.textContent) || '';
+    history.pushState({url: url}, title, url);
+    return this;
+  },
+  
+  checkCurrentState: function () {
+    return this.checkState((history.state && history.state.url) || location.href);
+  },
+  
+  checkState: function (path) {
+    path = path.replace(/^https?:\/\/[^\/]*/, '');
+    var state;
+    this.eachState(function () {
+      if (this.test(path)) {
+        state = this;
+        return false;
+      }
+    });
+    return state;
+  },
+  
+  eachState: function (fn) {
+    var states = this.states;
+    var state, i;
+    for (i in states) {
+      state = states[i];
+      if (fn.call(state, i, state) === false) {
+        break;
+      }
+    }
+    return this;
+  },
+  
+  go: function (name, data) {
+    var state = this.states[name];
+    if (state) {
+      this.changeState(state, data);
+    }
+    return this;
+  },
+  
+  changeState: function (state, data) {
+    if (this.state === state) {
+      return this;
+    }
+    this.fire('sr-state-change', {state: state});
+    state.getTemplate((function (doc) {
+      var title = doc.getElementsByTagName('title')[0];
+      var url = state.getUrl(data);
+      
+      title = (title && title.textContent) || '';
+      document.title = title;
+      
+      var appview = this.getViewElement(state, doc);
+      var viewElement = this.getViewElement(state);
+      
+      viewElement.unbindAll();
+      viewElement.innerHTML = (appview && appview.innerHTML) || '';
+      Platform.flush();
+      
+      history.pushState({url: url}, title, url);
+      
+      this.state = state;
+      this.fire('sr-state-changed', {state: state, doc: doc});
+    }).bind(this));
+    return this;
+  },
+  
+  getViewElement: function (state, doc) {
+    var len = state.info.names.length;
+    var view = doc || document;
+    var tmp;
+    do {
+      tmp = view.getElementsByTagName('sr-appview')[0];
+      if (!tmp) {
+        break;
+      }
+      view = tmp;
+    } while (--len);
+    return view;
+  }
+});</script></polymer-element>
+
+<polymer-element name="sr-state" attributes="name url templateUrl template onActive"><script>Polymer('sr-state', {
+  name: '',
+  url: '',
+  template: null,
+  templateUrl: null,
+  onActive: null,
+  
+  __info: null,
+  __parentState: null,
+  __fullInfo: null,
+  
+  get info () {
+    if (this.__info) {
+      return this.__info;
+    }
+    
+    var info = {};
+    var urldata = this.parseUrl();
+    
+    info.names = this.parseName();
+    info.params = urldata.params;
+    info.regexp = urldata.regexp;
+    
+    this.__info = info;
+    
+    return info;
+  },
+  
+  get fullInfo () {
+    if (this.__fullInfo) {
+      return this.__fullInfo;
+    }
+    var replaceMultiSlash = /\/\/+/g;
+    var info = {
+      url: '',
+      regexp: '',
+      params: []
+    };
+    var state = this;
+    do {
+      info.url = state.url + info.url;
+      info.regexp = state.info.regexp + info.regexp;
+      Array.prototype.splice.apply(info.params, [0, state.info.params.length].concat(state.info.params));
+      state = state.parentState;
+    } while (state);
+    info.regexp = '^' + info.regexp + '$';
+    info.regexp = info.regexp.replace(replaceMultiSlash, '/');
+    info.regexp = new RegExp(info.regexp);
+    info.url = info.url.replace(replaceMultiSlash, '/');
+    this.__fullInfo = info;
+    return this.__fullInfo;
+  },
+  
+  get parentState () {
+    if (this.__parentState) {
+      return this.__parentState;
+    }
+    var parentElement = this.parentElement;
+    var states = parentElement.states;
+    var names = this.info.names;
+    var parentName = names.slice(0, names.length - 1).join('.');
+    this.__parentState = states[parentName] || null;
+    return this.__parentState;
+  },
+  
+  parseName: function () {
+    var placeholderRegexp = /\uffff/g;
+    return (function (names) {
+      var data = [];
+      var i, len = names.length;
+      for (i = 0; i < len; i += 1) {
+        data.push(names[i].replace(placeholderRegexp, '.'));
+      }
+      return data;
+    })((this.name || '').replace(/\\./g, '\uffff').split('.'));
+  },
+  
+  parseUrl: function () {
+    // 1. /book/:id      => /book/507f191e810c19729de860ea
+    // 2. /book/*/:id    => /book/this-is-a-book/507f191e810c19729de860ea 
+    // 3. /books/:page?  => /books/2,   /books
+    var url = this.url || '';
+    var params = [];
+    var regexp = url
+    .replace(/\*/g, '(.*)')
+    .replace(/(\/)?:(\w+)(\?)?/g, function (_, slash, key, optional) {
+      params.push({
+        optional: !!optional,
+        name: key
+      });
+      return ''
+      + (optional ? '' : slash)
+      + (optional ? slash : '')
+      + '([^/]+?)'
+      + (optional || '')
+      + '/*';
+    });
+    return {
+      params: params,
+      regexp: regexp
+    };
+  },
+  
+  getUrl: function (data) {
+    data = data || {};
+    var url = this.fullInfo.url || '';
+    url = url.replace(/(\/)?:(\w+)(\?)?/g, function (_, slash, key, optional) {
+      return ''
+      + (slash || '')
+      + data[key];
+    });
+    return url;
+  },
+  
+  getParams: function (path) {
+    path = path || '';
+    var regexp = this.fullInfo.regexp;
+    var match = path.match(regexp);
+    var params = this.info.params;
+    var data = {};
+    var len = match.length - 1;
+    match.shift();
+    while (len--) {
+      data[params[len].name] = match[len];
+    }
+    return data;
+  },
+  
+  test: function (path) {
+    return this.fullInfo.regexp.test(path);
+  },
+  
+  getTemplate: function (cb) {
+    if (this.template) {
+      cb && cb(this.html2dom(this.template));
+      return this;
+    }
+    var xhr = document.createElement('sr-xhr');
+    var options = {};
+    
+    options.url = this.templateUrl;
+    options.responseType = 'text';
+    options.callback = (function (response, xhr) {
+      var template = this.receiveAjaxResponse(response, xhr);
+      if (template) {
+        cb && cb(template);
+      }
+    }).bind(this);
+    
+    xhr.request(options);
+    return this;
+  },
+  
+  receiveAjaxResponse: function (response, xhr) {
+    var status = (xhr.status || 0);
+    if (status >= 200 && status < 300) {
+      return this.html2dom(xhr.responseText);
+    }
+    this.fire('sr-error', {response: response, xhr: xhr});
+    return false;
+  },
+  
+  html2dom: function (html) {
+    var doc
+    if (window.DOMParser) {
+      var parser = new DOMParser();
+      doc = parser.parseFromString(html, 'text/html');
+    } else if (document.implementation && document.implementation.createDocument) {
+      doc = document.implementation.createHTMLDocument();
+      doc.documentElement.innerHTML = html;
+    } else {
+      doc = new ActiveXObject('Microsoft.XMLDOM');
+      try {
+        doc.async = 'false';
+        doc.loadXML(html);
+      } catch (e) {}
+    }
+    return doc;
+  }
+});</script></polymer-element>
