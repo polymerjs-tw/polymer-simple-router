@@ -10,16 +10,12 @@ html(lang="zh-TW")
     script(src="./js/demo-app.js")
 
     link(rel="import", src="./polymer-simple-router-elements.html")
+    link(rel="import", src="./routes.html")
 
   body
-    sr-router
-      sr-state(name="home", url="/", templateUrl="./index.html")
-      sr-state(name="home.state1", templateUrl="/home-state1.html", url="/state1/:test")
-      sr-state(name="home.state1.state2", url="/state1/:s1val/state2/:s2val")
-      sr-state(name="home.state3", url="/state3")
-      sr-state(name="test", url="/test", template="<title>test</title><sr-appview>TEST</sr-appview>")
-      sr-state(name="test.gg", url="/test/:gg", template="<title>test</title><sr-appview>TEST</sr-appview>")
-    
+
+    app-routes
+
     sr-appview
       | HOME
       br

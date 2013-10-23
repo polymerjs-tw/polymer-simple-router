@@ -1,0 +1,16 @@
+polymer-element(name="app-routes")
+  template
+    sr-router
+      sr-state(name="home", url="/", templateUrl="./index.html")
+      sr-state(name="home.state1", templateUrl="/home-state1.html", url="/state1/:test")
+      sr-state(name="home.state1.state2", url="/state1/:s1val/state2/:s2val")
+      sr-state(name="home.state3", url="/state3")
+      sr-state(name="test", url="/test", template="<title>test</title><sr-appview>TEST</sr-appview>")
+      sr-state(name="test.gg", url="/test/:gg", template="<title>test</title><sr-appview>TEST</sr-appview>")
+  script
+    Polymer('app-routes', {
+      router: null,
+      created: function () {
+        this.router = this.shadowRoot.querySelector('sr-router');
+      }
+    });

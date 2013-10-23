@@ -4,7 +4,7 @@
   document.addEventListener('WebComponentsReady', function () {
     console.log('WebComponentsReady');
 
-    var router = document.querySelector('sr-router');
+    var router = document.querySelector('app-routes').router;
     var btn = document.querySelector('.btn');
 
     window.router = router;
