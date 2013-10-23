@@ -12,19 +12,19 @@ html(lang="zh-TW")
     link(rel="import", src="./polymer-simple-router-elements.html")
 
   body
-    polymer-sr-router
-      polymer-sr-state(name="home", url="/", templateUrl="./index.html")
-      polymer-sr-state(name="home.state1", templateUrl="/home-state1.html", url="/state1/:test")
-      polymer-sr-state(name="home.state1.state2", url="/state1/:s1val/state2/:s2val")
-      polymer-sr-state(name="home.state3", url="/state3")
-      polymer-sr-state(name="test", url="/test", template="<title>test</title><polymer-sr-appview>TEST</polymer-sr-appview>")
-      polymer-sr-state(name="test.gg", url="/test/:gg", template="<title>test</title><polymer-sr-appview>TEST</polymer-sr-appview>")
+    sr-router
+      sr-state(name="home", url="/", templateUrl="./index.html")
+      sr-state(name="home.state1", templateUrl="/home-state1.html", url="/state1/:test")
+      sr-state(name="home.state1.state2", url="/state1/:s1val/state2/:s2val")
+      sr-state(name="home.state3", url="/state3")
+      sr-state(name="test", url="/test", template="<title>test</title><sr-appview>TEST</sr-appview>")
+      sr-state(name="test.gg", url="/test/:gg", template="<title>test</title><sr-appview>TEST</sr-appview>")
     
-    polymer-sr-appview
+    sr-appview
       | HOME
       br
       a(class="btn", href="/home/state1/abc", data-state="home.state1", data-data='{"test": "abc"}') test
 
       div
-        polymer-sr-appview
+        sr-appview
           | ...

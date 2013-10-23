@@ -4,7 +4,7 @@
   document.addEventListener('WebComponentsReady', function () {
     console.log('WebComponentsReady');
 
-    var router = document.querySelector('polymer-sr-router');
+    var router = document.querySelector('sr-router');
     var btn = document.querySelector('.btn');
 
     window.router = router;
@@ -20,7 +20,7 @@
       router.go(stateName, data);
     });
 
-    router.addEventListener('polymer-sr-state-changed', function () {
+    router.addEventListener('sr-state-changed', function () {
       console.log(123);
     });
 

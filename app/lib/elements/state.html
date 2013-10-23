@@ -1,6 +1,6 @@
-<polymer-element name="polymer-sr-state" attributes="name url templateUrl template onActive">
+<polymer-element name="sr-state" attributes="name url templateUrl template onActive">
   <script>
-    Polymer('polymer-sr-state', {
+    Polymer('sr-state', {
       name: '',
       url: '',
       template: null,
@@ -137,7 +137,7 @@
           cb && cb(this.html2dom(this.template));
           return this;
         }
-        var xhr = document.createElement('polymer-sr-xhr');
+        var xhr = document.createElement('sr-xhr');
         var options = {};
 
         options.url = this.templateUrl;
@@ -158,7 +158,7 @@
         if (status >= 200 && status < 300) {
           return this.html2dom(xhr.responseText);
         }
-        this.fire('polymer-sr-error', {response: response, xhr: xhr});
+        this.fire('sr-error', {response: response, xhr: xhr});
         return false;
       },
 

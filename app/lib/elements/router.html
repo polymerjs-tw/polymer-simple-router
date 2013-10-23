@@ -1,4 +1,4 @@
-<polymer-element name="polymer-sr-router" attributes="state">
+<polymer-element name="sr-router" attributes="state">
   <template>
     <style>
       @host {
@@ -9,7 +9,7 @@
     </style>
   </template>
   <script>
-    Polymer('polymer-sr-router', {
+    Polymer('sr-router', {
       state: null,
       states: {},
       stateNames: [],
@@ -32,9 +32,9 @@
       },
 
       initAppView: function () {
-        var appview = document.getElementsByTagName('polymer-sr-appview')[0];
+        var appview = document.getElementsByTagName('sr-appview')[0];
         if (!appview) {
-          throw new Error('<polymer-sr-appview> not found.');
+          throw new Error('<sr-appview> not found.');
         }
         this.appview = appview;
         return this;
@@ -54,7 +54,7 @@
       initStates: function () {
         var states = this.states;
         var names = this.stateNames;
-        var stateElements = document.getElementsByTagName('polymer-sr-state');
+        var stateElements = document.getElementsByTagName('sr-state');
         var i, len = stateElements.length;
         var state;
         for (i = 0; i < len; i += 1) {
@@ -117,7 +117,7 @@
         if (this.state === state) {
           return this;
         }
-        this.fire('polymer-sr-state-change', {state: state});
+        this.fire('sr-state-change', {state: state});
         state.getTemplate((function (doc) {
           var title = doc.getElementsByTagName('title')[0];
           var url = state.getUrl(data);
@@ -135,7 +135,7 @@
           history.pushState({url: url}, title, url);
 
           this.state = state;
-          this.fire('polymer-sr-state-changed', {state: state, doc: doc});
+          this.fire('sr-state-changed', {state: state, doc: doc});
         }).bind(this));
         return this;
       },
@@ -145,7 +145,7 @@
         var view = doc || document;
         var tmp;
         do {
-          tmp = view.getElementsByTagName('polymer-sr-appview')[0];
+          tmp = view.getElementsByTagName('sr-appview')[0];
           if (!tmp) {
             break;
           }
