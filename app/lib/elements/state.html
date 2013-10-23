@@ -9,7 +9,7 @@
 
       __info: null,
       __parentState: null,
-      __fullPathRegexp: null,
+      __fullInfo: null,
       
       get info () {
         if (this.__info) {
@@ -27,6 +27,31 @@
 
         return info;
       },
+      
+      get fullInfo () {
+        if (this.__fullInfo) {
+          return this.__fullInfo;
+        }
+        var replaceMultiSlash = /\/\/+/g;
+        var info = {
+          url: '',
+          regexp: '',
+          params: []
+        };
+        var state = this;
+        do {
+          info.url = state.url + info.url;
+          info.regexp = state.info.regexp + info.regexp;
+          Array.prototype.splice.apply(info.params, [0, state.info.params.length].concat(state.info.params));
+          state = state.parentState;
+        } while (state);
+        info.regexp = '^' + info.regexp + '$';
+        info.regexp = info.regexp.replace(replaceMultiSlash, '/');
+        info.regexp = new RegExp(info.regexp);
+        info.url = info.url.replace(replaceMultiSlash, '/');
+        this.__fullInfo = info;
+        return this.__fullInfo;
+      },
 
       get parentState () {
         if (this.__parentState) {
@@ -38,22 +63,6 @@
         var parentName = names.slice(0, names.length - 1).join('.');
         this.__parentState = states[parentName] || null;
         return this.__parentState;
-      },
-
-      get fullPathRegexp () {
-        if (this.__fullPathRegexp) {
-          return this.__fullPathRegexp;
-        }
-        var regexp = '';
-        var state = this;
-        do {
-          regexp = state.info.regexp + regexp;
-          state = state.parentState;
-        } while (state);
-        regexp = '^' + regexp + '$';
-        regexp = regexp.replace(/\/\/+/g, '/')
-        this.__fullPathRegexp = new RegExp(regexp);
-        return this.__fullPathRegexp;
       },
 
       parseName: function () {
@@ -96,7 +105,7 @@
 
       getUrl: function (data) {
         data = data || {};
-        var url = this.url || '';
+        var url = this.fullInfo.url || '';
         url = url.replace(/(\/)?:(\w+)(\?)?/g, function (_, slash, key, optional) {
           return ''
           + (slash || '')
@@ -107,7 +116,7 @@
 
       getParams: function (path) {
         path = path || '';
-        var regexp = this.fullPathRegexp;
+        var regexp = this.fullInfo.regexp;
         var match = path.match(regexp);
         var params = this.info.params;
         var data = {};
@@ -120,7 +129,7 @@
       },
 
       test: function (path) {
-        return this.fullPathRegexp.test(path);
+        return this.fullInfo.regexp.test(path);
       },
 
       getTemplate: function (cb) {

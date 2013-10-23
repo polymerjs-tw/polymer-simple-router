@@ -13,12 +13,18 @@ html(lang="zh-TW")
 
   body
     polymer-sr-router
-      polymer-sr-state(name="home", url="/", templateUrl="./home.html")
-      polymer-sr-state(name="home.state1", templateUrl="/", url="/state1/:test")
+      polymer-sr-state(name="home", url="/", templateUrl="./index.html")
+      polymer-sr-state(name="home.state1", templateUrl="/home-state1.html", url="/state1/:test")
       polymer-sr-state(name="home.state1.state2", url="/state1/:s1val/state2/:s2val")
       polymer-sr-state(name="home.state3", url="/state3")
       polymer-sr-state(name="test", url="/test", template="<title>test</title><polymer-sr-appview>TEST</polymer-sr-appview>")
       polymer-sr-state(name="test.gg", url="/test/:gg", template="<title>test</title><polymer-sr-appview>TEST</polymer-sr-appview>")
     
     polymer-sr-appview
-      a(class="btn", href="/test", data-state="test") test
+      | HOME
+      br
+      a(class="btn", href="/home/state1/abc", data-state="home.state1", data-data='{"test": "abc"}') test
+
+      div
+        polymer-sr-appview
+          | ...

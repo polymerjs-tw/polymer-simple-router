@@ -70,6 +70,10 @@
 
       initState: function () {
         this.state = this.checkCurrentState();
+        var title = document.getElementsByTagName('title')[0];
+        var url = location.pathname;
+        title = (title && title.textContent) || '';
+        history.pushState({url: url}, title, url);
         return this;
       },
 
@@ -117,21 +121,37 @@
         state.getTemplate((function (doc) {
           var title = doc.getElementsByTagName('title')[0];
           var url = state.getUrl(data);
+
           title = (title && title.textContent) || '';
           document.title = title;
-          var appview = doc.getElementsByTagName('polymer-sr-appview')[0];
-          this.appview.innerHTML = (appview && appview.innerHTML) || '';
+
+          var appview = this.getViewElement(state, doc);
+          var viewElement = this.getViewElement(state);
+
+          viewElement.unbindAll();
+          viewElement.innerHTML = (appview && appview.innerHTML) || '';
+          Platform.flush();
+
           history.pushState({url: url}, title, url);
+
           this.state = state;
           this.fire('polymer-sr-state-changed', {state: state, doc: doc});
         }).bind(this));
         return this;
       },
 
-      writeToHistory: function () {
-        var title = document.title;
-        history.pushState({url: url}, title, url);
-        return this;
+      getViewElement: function (state, doc) {
+        var len = state.info.names.length;
+        var view = doc || document;
+        var tmp;
+        do {
+          tmp = view.getElementsByTagName('polymer-sr-appview')[0];
+          if (!tmp) {
+            break;
+          }
+          view = tmp;
+        } while (--len);
+        return view;
       }
     });
   </script>
