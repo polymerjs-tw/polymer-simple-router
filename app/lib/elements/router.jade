@@ -12,6 +12,7 @@ polymer-element(name="sr-router", \attributes="state")
       states: {},
       stateNames: [],
       appview: null,
+      history: null,
 
       get data () {
         var state = this.state;
@@ -19,14 +20,17 @@ polymer-element(name="sr-router", \attributes="state")
       },
 
       created: function () {
-        if (!window.history) {
-          throw new Error('Use HTML5-History-API to support old browser.');
-        }
         return this
-          .initAppView()
-          .initEventListener()
-          .initStates()
-          .initState();
+        .initHistory()
+        .initAppView()
+        .initEventListener()
+        .initStates()
+        .initState();
+      },
+
+      initHistory: function () {
+        this.history = document.createElement('sr-history');
+        return this;
       },
 
       initAppView: function () {
@@ -39,12 +43,10 @@ polymer-element(name="sr-router", \attributes="state")
       },
 
       initEventListener: function () {
-        window.addEventListener('popstate', (function (e) {
+        this.history.addEventListener('urlChanged', (function (e) {
           var state;
-          if (e.state && e.state.url) {
-            state = this.checkState(e.state.url);
-            this.changeState(state);
-          }
+          state = this.checkState(e.detail.fragment);
+          this.changeState(state);
         }).bind(this));
         return this;
       },
@@ -71,12 +73,13 @@ polymer-element(name="sr-router", \attributes="state")
         var title = document.getElementsByTagName('title')[0];
         var url = location.pathname;
         title = (title && title.textContent) || '';
-        history.pushState({url: url}, title, url);
+        this.history.pushState({url: url}, title, url);
         return this;
       },
 
       checkCurrentState: function () {
-        return this.checkState((history.state && history.state.url) || location.href);
+        var state = this.checkState(this.history.fragment);
+        return state;
       },
 
       checkState: function (path) {
@@ -130,7 +133,7 @@ polymer-element(name="sr-router", \attributes="state")
           viewElement.innerHTML = (appview && appview.innerHTML) || '';
           Platform.flush();
 
-          history.pushState({url: url}, title, url);
+          this.history.pushState({url: url}, title, url);
 
           this.state = state;
           this.fire('sr-state-changed', {state: state, doc: doc});

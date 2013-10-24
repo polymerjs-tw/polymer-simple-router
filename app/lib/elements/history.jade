@@ -1,0 +1,104 @@
+polymer-element(name="sr-history", \attributes="root html5mode hashPrefix")
+  template
+    style
+      @host {
+        * {
+          display: none;
+        }
+      }
+  script
+    Polymer('sr-history', {
+      root: '/',
+      html5mode: true,
+      hashPrefix: '!',
+
+      win: window,
+      loc: window.location,
+      routeStripper: /^[#\/]|\s+$/g,
+      rootStripper: /^\/+|\/+$/g,
+      protocalStripper: /^\w+:\/\/[^\/]+/,
+      trailingSlash: /\/$/,
+      pathStripper: /[?#].*$/,
+      
+      get hash () {
+        var match = this.loc.href.match(/#(.*)$/);
+        return (match && match[1]) || '';
+      },
+
+      get fragment () {
+        return this.getFragment();
+      },
+
+      created: function () {
+        this
+        .initRootPath()
+        .initPushState()
+        .initCheckUrl();
+      },
+
+      initPushState: function (data, title, url) {
+        var html5mode = this.isHtml5Mode();
+        this.pushState = this[html5mode ? 'updateState' : 'updateHash'];
+        return this;
+      },
+
+      initRootPath: function () {
+        var root = this.root.replace(this.trailingSlash, '');
+        this.root = root || '/';
+        return this;
+      },
+
+      initCheckUrl: function () {
+        var win = this.win;
+        if (this.isHtml5Mode()) {
+          win.addEventListener('popstate', this.checkUrl.bind(this));
+        } else {
+          win.addEventListener('hashchange', this.checkUrl.bind(this));
+        }
+        return this;
+      },
+
+      getFragment: function (fragment) {
+        if (fragment || this.isHtml5Mode()) {
+          var root = this.root;
+          fragment = fragment || this.loc.pathname;
+          if (fragment.indexOf(root)) {
+            fragment = fragment.slice(root.length);
+          }
+        } else {
+          fragment = this.hash;
+        }
+        return fragment;
+      },
+
+      pushState: function () {
+        throw new Error('Please run `initPushState` before use this method.');
+      },
+
+      isHtml5Mode: function () {
+        var history = this.win.history;
+        var html5mode = this.html5mode;
+        return html5mode && history && history.pushState;
+      },
+
+      checkUrl: function (e) {
+        var data = {};
+        data.hash = this.hash;
+        if (e.state && e.state.url) {
+          data.fragment = this.getFragment(e.state.url.replace(this.protocalStripper, ''));
+        } else {
+          data.fragment = this.fragment;
+        }
+        this.fire('urlChanged', data);
+      },
+
+      updateHash: function (data, title, url) {
+        var loc = this.loc;
+        var href = loc.href.replace(/(javascript:|#).*$/, '');
+        loc.replace(href + '#' + this.hashPrefix + title, url);
+      },
+
+      updateState: function (data, title, url) {
+        history.pushState(data || {}, title, url);
+      }
+    });

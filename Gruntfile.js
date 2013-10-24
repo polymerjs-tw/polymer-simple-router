@@ -30,7 +30,7 @@ module.exports = function (grunt) {
       },
       jade: {
         files: ['<%= sourceDir %>/**/*.jade'],
-        tasks: ['jade:dev']
+        tasks: ['jade:dev', 'jade:elementsDev']
       },
       stylus: {
         files: ['<%= sourceDir %>/**/*.styl'],
