@@ -1,4 +1,4 @@
-polymer-element(name="sr-router", \attributes="state")
+polymer-element(name="sr-router", \attributes="state root")
   template
     style
       @host {
@@ -8,6 +8,7 @@ polymer-element(name="sr-router", \attributes="state")
       }
   script
     Polymer('sr-router', {
+      root: '/',
       state: null,
       states: {},
       stateNames: [],
@@ -29,7 +30,9 @@ polymer-element(name="sr-router", \attributes="state")
       },
 
       initHistory: function () {
-        this.history = document.createElement('sr-history');
+        var history = document.createElement('sr-history');
+        history.root = this.root;
+        this.history = history;
         return this;
       },
 

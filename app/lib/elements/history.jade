@@ -29,9 +29,15 @@ polymer-element(name="sr-history", \attributes="root html5mode hashPrefix")
         return this.getFragment();
       },
 
+      rootChanged: function () {
+        var root = this.root.replace(this.trailingSlash, '') || '/';
+        if (this.root !== root) {
+          this.root = root;
+        }
+      },
+
       created: function () {
         this
-        .initRootPath()
         .initPushState()
         .initCheckUrl();
       },
@@ -39,12 +45,6 @@ polymer-element(name="sr-history", \attributes="root html5mode hashPrefix")
       initPushState: function (data, title, url) {
         var html5mode = this.isHtml5Mode();
         this.pushState = this[html5mode ? 'updateState' : 'updateHash'];
-        return this;
-      },
-
-      initRootPath: function () {
-        var root = this.root.replace(this.trailingSlash, '');
-        this.root = root || '/';
         return this;
       },
 

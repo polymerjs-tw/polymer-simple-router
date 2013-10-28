@@ -75,6 +75,106 @@
 
 <polymer-element name="sr-appview"></polymer-element>
 
+<polymer-element name="sr-history" attributes="root html5mode hashPrefix"><template><style>@host {
+  * {
+    display: none;
+  }
+}</style></template><script>Polymer('sr-history', {
+  root: '/',
+  html5mode: true,
+  hashPrefix: '!',
+  
+  win: window,
+  loc: window.location,
+  routeStripper: /^[#\/]|\s+$/g,
+  rootStripper: /^\/+|\/+$/g,
+  protocalStripper: /^\w+:\/\/[^\/]+/,
+  trailingSlash: /\/$/,
+  pathStripper: /[?#].*$/,
+  
+  get hash () {
+    var match = this.loc.href.match(/#(.*)$/);
+    return (match && match[1]) || '';
+  },
+  
+  get fragment () {
+    return this.getFragment();
+  },
+  
+  created: function () {
+    this
+    .initRootPath()
+    .initPushState()
+    .initCheckUrl();
+  },
+  
+  initPushState: function (data, title, url) {
+    var html5mode = this.isHtml5Mode();
+    this.pushState = this[html5mode ? 'updateState' : 'updateHash'];
+    return this;
+  },
+  
+  initRootPath: function () {
+    var root = this.root.replace(this.trailingSlash, '');
+    this.root = root || '/';
+    return this;
+  },
+  
+  initCheckUrl: function () {
+    var win = this.win;
+    if (this.isHtml5Mode()) {
+      win.addEventListener('popstate', this.checkUrl.bind(this));
+    } else {
+      win.addEventListener('hashchange', this.checkUrl.bind(this));
+    }
+    return this;
+  },
+  
+  getFragment: function (fragment) {
+    if (fragment || this.isHtml5Mode()) {
+      var root = this.root;
+      fragment = fragment || this.loc.pathname;
+      if (fragment.indexOf(root)) {
+        fragment = fragment.slice(root.length);
+      }
+    } else {
+      fragment = this.hash;
+    }
+    return fragment;
+  },
+  
+  pushState: function () {
+    throw new Error('Please run `initPushState` before use this method.');
+  },
+  
+  isHtml5Mode: function () {
+    var history = this.win.history;
+    var html5mode = this.html5mode;
+    return html5mode && history && history.pushState;
+  },
+  
+  checkUrl: function (e) {
+    var data = {};
+    data.hash = this.hash;
+    if (e.state && e.state.url) {
+      data.fragment = this.getFragment(e.state.url.replace(this.protocalStripper, ''));
+    } else {
+      data.fragment = this.fragment;
+    }
+    this.fire('urlChanged', data);
+  },
+  
+  updateHash: function (data, title, url) {
+    var loc = this.loc;
+    var href = loc.href.replace(/(javascript:|#).*$/, '');
+    loc.replace(href + '#' + this.hashPrefix + title, url);
+  },
+  
+  updateState: function (data, title, url) {
+    history.pushState(data || {}, title, url);
+  }
+});</script></polymer-element>
+
 <polymer-element name="sr-router" attributes="state"><template><style>@host {
   * {
     display: none;
@@ -84,6 +184,7 @@
   states: {},
   stateNames: [],
   appview: null,
+  history: null,
   
   get data () {
     var state = this.state;
@@ -91,14 +192,17 @@
   },
   
   created: function () {
-    if (!window.history) {
-      throw new Error('Use HTML5-History-API to support old browser.');
-    }
     return this
-      .initAppView()
-      .initEventListener()
-      .initStates()
-      .initState();
+    .initHistory()
+    .initAppView()
+    .initEventListener()
+    .initStates()
+    .initState();
+  },
+  
+  initHistory: function () {
+    this.history = document.createElement('sr-history');
+    return this;
   },
   
   initAppView: function () {
@@ -111,12 +215,10 @@
   },
   
   initEventListener: function () {
-    window.addEventListener('popstate', (function (e) {
+    this.history.addEventListener('urlChanged', (function (e) {
       var state;
-      if (e.state && e.state.url) {
-        state = this.checkState(e.state.url);
-        this.changeState(state);
-      }
+      state = this.checkState(e.detail.fragment);
+      this.changeState(state);
     }).bind(this));
     return this;
   },
@@ -143,12 +245,13 @@
     var title = document.getElementsByTagName('title')[0];
     var url = location.pathname;
     title = (title && title.textContent) || '';
-    history.pushState({url: url}, title, url);
+    this.history.pushState({url: url}, title, url);
     return this;
   },
   
   checkCurrentState: function () {
-    return this.checkState((history.state && history.state.url) || location.href);
+    var state = this.checkState(this.history.fragment);
+    return state;
   },
   
   checkState: function (path) {
@@ -202,7 +305,7 @@
       viewElement.innerHTML = (appview && appview.innerHTML) || '';
       Platform.flush();
       
-      history.pushState({url: url}, title, url);
+      this.history.pushState({url: url}, title, url);
       
       this.state = state;
       this.fire('sr-state-changed', {state: state, doc: doc});
