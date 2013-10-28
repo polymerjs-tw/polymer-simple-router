@@ -101,9 +101,15 @@
     return this.getFragment();
   },
   
+  rootChanged: function () {
+    var root = this.root.replace(this.trailingSlash, '') || '/';
+    if (this.root !== root) {
+      this.root = root;
+    }
+  },
+  
   created: function () {
     this
-    .initRootPath()
     .initPushState()
     .initCheckUrl();
   },
@@ -111,12 +117,6 @@
   initPushState: function (data, title, url) {
     var html5mode = this.isHtml5Mode();
     this.pushState = this[html5mode ? 'updateState' : 'updateHash'];
-    return this;
-  },
-  
-  initRootPath: function () {
-    var root = this.root.replace(this.trailingSlash, '');
-    this.root = root || '/';
     return this;
   },
   
@@ -175,11 +175,12 @@
   }
 });</script></polymer-element>
 
-<polymer-element name="sr-router" attributes="state"><template><style>@host {
+<polymer-element name="sr-router" attributes="state root"><template><style>@host {
   * {
     display: none;
   }
 }</style></template><script>Polymer('sr-router', {
+  root: '/',
   state: null,
   states: {},
   stateNames: [],
@@ -201,7 +202,9 @@
   },
   
   initHistory: function () {
-    this.history = document.createElement('sr-history');
+    var history = document.createElement('sr-history');
+    history.root = this.root;
+    this.history = history;
     return this;
   },
   
@@ -483,7 +486,7 @@
   
   receiveAjaxResponse: function (response, xhr) {
     var status = (xhr.status || 0);
-    if (status >= 200 && status < 300) {
+    if (typeof xhr.responseText === 'string') {
       return this.html2dom(xhr.responseText);
     }
     this.fire('sr-error', {response: response, xhr: xhr});
@@ -491,14 +494,32 @@
   },
   
   html2dom: function (html) {
-    var doc
+    return this.useDOMParser(html)
+      || this.useImplementation(html)
+      || this.useActiveX(html);
+  },
+  
+  useDOMParser: function (html) {
+    var doc;
     if (window.DOMParser) {
       var parser = new DOMParser();
       doc = parser.parseFromString(html, 'text/html');
-    } else if (document.implementation && document.implementation.createDocument) {
+    }
+    return doc;
+  },
+  
+  useImplementation: function (html) {
+    var doc;
+    if (document.implementation && document.implementation.createDocument) {
       doc = document.implementation.createHTMLDocument();
       doc.documentElement.innerHTML = html;
-    } else {
+    }
+    return doc;
+  },
+  
+  useActiveX: function (html) {
+    var doc;
+    if (window.ActiveXObject) {
       doc = new ActiveXObject('Microsoft.XMLDOM');
       try {
         doc.async = 'false';
