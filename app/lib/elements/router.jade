@@ -20,13 +20,15 @@ polymer-element(name="sr-router", \attributes="state root")
         return state && state.getParams(location.params);
       },
 
-      created: function () {
-        return this
-        .initHistory()
-        .initAppView()
-        .initEventListener()
-        .initStates()
-        .initState();
+      ready: function () {
+        setTimeout((function () {
+          this
+          .initHistory()
+          .initAppView()
+          .initEventListener()
+          .initStates()
+          .initState();
+        }).bind(this), 0);
       },
 
       initHistory: function () {
