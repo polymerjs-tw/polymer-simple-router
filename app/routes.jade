@@ -7,10 +7,13 @@ polymer-element(name="app-routes")
       sr-state(name="home.state3", url="/state3")
       sr-state(name="test", url="/test", template="<title>test</title><sr-appview>TEST</sr-appview>")
       sr-state(name="test.gg", url="/test/:gg", template="<title>test</title><sr-appview>TEST</sr-appview>")
-  script
+  script.
     Polymer('app-routes', {
       router: null,
-      created: function () {
-        this.router = this.shadowRoot.querySelector('sr-router');
+      ready: function () {
+        setTimeout((function () {
+          this.router = this.shadowRoot.querySelector('sr-router');
+          this.fire('routerReady', {router: this.router});
+        }).bind(this));
       }
     });

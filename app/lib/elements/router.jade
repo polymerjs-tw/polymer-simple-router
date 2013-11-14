@@ -1,12 +1,12 @@
 polymer-element(name="sr-router", \attributes="state root")
   template
-    style
+    style.
       @host {
         * {
           display: none;
         }
       }
-  script
+  script.
     Polymer('sr-router', {
       root: '/',
       state: null,
@@ -28,7 +28,7 @@ polymer-element(name="sr-router", \attributes="state root")
           .initEventListener()
           .initStates()
           .initState();
-        }).bind(this), 0);
+        }).bind(this));
       },
 
       initHistory: function () {

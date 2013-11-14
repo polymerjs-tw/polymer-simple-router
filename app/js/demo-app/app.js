@@ -4,24 +4,26 @@
   document.addEventListener('WebComponentsReady', function () {
     console.log('WebComponentsReady');
 
-    var router = document.querySelector('app-routes').router;
+    var routes = document.querySelector('app-routes');
     var btn = document.querySelector('.btn');
 
-    window.router = router;
+    routes.addEventListener('routerReady', function () {
+      var router = routes.router;
 
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-      var target = e.target;
-      var stateName = target.dataset.state;
-      var data = JSON.parse(target.dataset.data || '{}');
+        var target = e.target;
+        var stateName = target.dataset.state;
+        var data = JSON.parse(target.dataset.data || '{}');
 
-      router.go(stateName, data);
-    });
+        router.go(stateName, data);
+      });
 
-    router.addEventListener('sr-state-changed', function () {
-      console.log(123);
+      router.addEventListener('sr-state-changed', function () {
+        console.log(123);
+      });
     });
 
   });

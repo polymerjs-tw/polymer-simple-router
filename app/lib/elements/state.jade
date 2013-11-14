@@ -1,10 +1,11 @@
-polymer-element(name="sr-state", \attributes="name url templateUrl template onActive")
-  script
+polymer-element(name="sr-state", \attributes="name url templateUrl template onActive elementName")
+  script.
     Polymer('sr-state', {
       name: '',
       url: '',
       template: null,
       templateUrl: null,
+      elementName: null,
       onActive: null,
 
       __info: null,
@@ -133,24 +134,43 @@ polymer-element(name="sr-state", \attributes="name url templateUrl template onAc
       },
 
       getTemplate: function (cb) {
-        if (this.template) {
-          cb && cb(this.html2dom(this.template));
-          return this;
-        }
-        var xhr = document.createElement('sr-xhr');
-        var options = {};
-
-        options.url = this.templateUrl;
-        options.responseType = 'text';
-        options.callback = (function (response, xhr) {
-          var template = this.receiveAjaxResponse(response, xhr);
-          if (template) {
-            cb && cb(template);
-          }
-        }).bind(this);
-
-        xhr.request(options);
+        cb && this.getTemplateString(cb)
+          || this.getTemplateFromElementName(cb)
+          || this.getTemplateFromUrl(cb);
         return this;
+      },
+
+      getTemplateString: function (cb) {
+        if (this.template) {
+          cb(this.html2dom(this.template));
+          return true;
+        }
+      },
+
+      getTemplateFromUrl: function (cb) {
+        if (this.templateUrl) {
+          var xhr = document.createElement('sr-xhr');
+          var options = {};
+
+          options.url = this.templateUrl;
+          options.responseType = 'text';
+          options.callback = (function (response, xhr) {
+            var template = this.receiveAjaxResponse(response, xhr);
+            if (template) {
+              cb(template);
+            }
+          }).bind(this);
+
+          xhr.request(options);
+          return true;
+        }
+      },
+
+      getTemplateFromElementName: function (cb) {
+        if (this.elementName) {
+          cb(document.createElement(this.elementName));
+          return true;
+        }
       },
 
       receiveAjaxResponse: function (response, xhr) {

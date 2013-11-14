@@ -18,6 +18,7 @@
     "test",
     "tests"
   ],
-  "dependencies": {
+  "devDependencies": {
+    "polymer": "~0.0.20131107"
   }
 }
