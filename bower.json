@@ -1,6 +1,6 @@
 {
   "name": "polymer-simple-router",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "authors": [
     "Po-Ying Chen <poying.me@gmail.com>"
   ],
@@ -12,8 +12,10 @@
   "ignore": [
     "**/.*",
     "node_modules",
+    "package.json",
     "bower_components",
     "public",
+    "example",
     "app",
     "test",
     "tests"
