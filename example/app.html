@@ -1,0 +1,75 @@
+<polymer-element name="my-app">
+  <template>
+    <sr-router>
+      <sr-state name="home" url="/" elementName="home-page"></sr-state>
+      <sr-state name="hello" url="/hello/:name" elementName="hello-page"></sr-state>
+    </sr-router>
+  </template>
+  <script>
+    Polymer('my-app', {
+      router: null,
+
+      ready: function () {
+        setTimeout((function () {
+          this.router = this.shadowRoot.querySelector('sr-router');
+          this.routerReady();
+        }).bind(this));
+      },
+      
+      routerReady: function () {
+        this.init();
+      },
+
+      init: function () {
+      }
+    });
+  </script>
+</polymer-element>
+
+<polymer-element name="home-page">
+  <template bind>
+    <input placeholder="type your name here" value="{{ name }}" />
+    <a class="go-to-hello-page" href="/hello"></a>
+  </template>
+  <script>
+    Polymer('home-page', {
+      name: 'QQ',
+
+      linkElement: null,
+
+      ready: function () {
+        setTimeout((function () {
+          this.linkElement = this.shadowRoot.querySelector('.go-to-hello-page');
+          this.linkOnClick = this.linkOnClick.bind(this);
+          this.linkElement.addEventListener('click', this.linkOnClick);
+        }).bind(this));
+      },
+
+      linkOnClick: function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.router.go('hello', {name: this.name});
+      },
+
+      leftView: function () {
+        this.linkElement.removeEventListener('click', this.linkOnClick);
+        this.linkElement = null;
+      }
+    });
+  </script>
+</polymer-element>
+
+<polymer-element name="hello-page">
+  <template bind>
+    Hello {{ name }} !
+  </template>
+  <script>
+    Polymer('hello-page', {
+      name: '---',
+
+      ready: function () {
+        this.name = this.data.name;
+      }
+    });
+  </script>
+</polymer-element>
