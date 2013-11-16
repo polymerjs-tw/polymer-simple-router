@@ -1,8 +1,12 @@
 {
   "name": "polymer-simple-router",
   "version": "0.0.2",
+  "description": "Polymer simple router",
   "authors": [
     "Po-Ying Chen <poying.me@gmail.com>"
+  ],
+  "contributors": [
+    "Carl X. Su <bcbcarl@gmail.com>"
   ],
   "keywords": [
     "polymer",

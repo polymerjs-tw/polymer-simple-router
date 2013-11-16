@@ -1,8 +1,8 @@
 {
   "name": "polymer-simple-router",
-  "homepage": "https://github.com/YouMeb/polymer-simple-router",
-  "version": "0.0.1",
-  "description": "",
+  "homepage": "https://github.com/polymerjs-tw/polymer-simple-router",
+  "version": "0.0.2",
+  "description": "Polymer simple router",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -10,6 +10,9 @@
     "start": "node ./node_modules/http-server/bin/http-server ./public"
   },
   "author": "Po-Ying Chen <poying.me@gmail.com>",
+  "contributors": [
+    "Carl X. Su <bcbcarl@gmail.com>"
+  ],
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
